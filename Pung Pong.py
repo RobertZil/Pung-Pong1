@@ -4,8 +4,11 @@ from random import randint
 init()
 font.init()
 
+
 LIGHT_BLUE = (173, 216, 230)
 WHITE = (255, 255, 255)
+BLACK = (0, 0, 0)
+
 
 win_width = 700
 win_height = 500
@@ -20,6 +23,17 @@ lose1 = font1.render("Player 1 LOSES!", True, (180, 0, 0))
 lose2 = font1.render("Player 2 LOSES!", True, (180, 0, 0))
 
 finish = False
+
+
+start_ticks = time.get_ticks()
+
+
+def draw_timer():
+    elapsed_ms = time.get_ticks() - start_ticks  
+    elapsed_sec = elapsed_ms / 1000  
+    timer_text = font1.render(f"Time: {elapsed_sec:.2f}", True, BLACK)  
+    window.blit(timer_text, (10, 10))
+
 
 class GameSprite(sprite.Sprite):
     def __init__(self, player_image, x, y, width, height, speed):
@@ -65,28 +79,40 @@ class Ball(GameSprite):
         if self.rect.colliderect(player1.rect) or self.rect.colliderect(player2.rect):
             self.speed_x *= -1
 
-
-img_hero = "ruby-red.png"    
-img_ball = "Pung Pong.png"    
+img_hero = "ruby-red.png"
+img_ball = "Pung Pong.png"
 
 player1 = Player1(img_hero, 30, win_height / 2 - 50, 20, 100, 7)
 player2 = Player2(img_hero, win_width - 50, win_height / 2 - 50, 20, 100, 7)
-ball = Ball(img_ball, win_width / 2 - 15, win_height / 2 - 15, 30, 30, 5, 5)
+ball = Ball(img_ball, win_width / 2 - 35, win_height / 2 - 25, 50, 50, 5, 5)
 
 game = True
 while game:
     for e in event.get():
         if e.type == QUIT:
             game = False
+        elif e.type == KEYDOWN and finish:
+            if e.key == K_r:
+               
+                ball.rect.x = win_width / 2 - 15
+                ball.rect.y = win_height / 2 - 15
+                ball.speed_x = 5 * (-1 if randint(0, 1) == 0 else 1)
+                ball.speed_y = 5 * (-1 if randint(0, 1) == 0 else 1)
+                finish = False
+
+               
+                start_ticks = time.get_ticks()
 
     if not finish:
         window.fill(LIGHT_BLUE)
+
+       
+        draw_timer()
 
         player1.update()
         player2.update()
         ball.update()
 
-        
         if ball.rect.left <= 0:
             finish = True
             window.blit(lose1, (200, 200))
@@ -98,12 +124,16 @@ while game:
         player2.reset()
         ball.reset()
     else:
-       
+        window.fill(LIGHT_BLUE)
+
         if ball.rect.left <= 0:
             window.blit(lose1, (200, 200))
         elif ball.rect.right >= win_width:
             window.blit(lose2, (200, 200))
-            
+
+        restart_text = font1.render("Click R to restart.", True, WHITE)
+        window.blit(restart_text, (150, 250))
+
     display.update()
     clock.tick(FPS)
 
